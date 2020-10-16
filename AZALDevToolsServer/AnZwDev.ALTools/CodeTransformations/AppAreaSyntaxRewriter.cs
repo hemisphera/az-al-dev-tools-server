@@ -16,11 +16,11 @@ namespace AnZwDev.ALTools.CodeTransformations
             this.ApplicationAreaName = null;
         }
 
-        protected override SyntaxNode AfterVisitSourceCode(SyntaxNode node)
+        protected override SyntaxNode AfterVisitNode(SyntaxNode node)
         {
             if (this.NoOfChanges == 0)
                 return null;
-            return base.AfterVisitSourceCode(node);
+            return base.AfterVisitNode(node);
         }
 
         public override SyntaxNode VisitPageField(PageFieldSyntax node)
@@ -99,7 +99,18 @@ namespace AnZwDev.ALTools.CodeTransformations
             SeparatedSyntaxList<IdentifierNameSyntax> values = new SeparatedSyntaxList<IdentifierNameSyntax>();
             values = values.Add(SyntaxFactory.IdentifierName(this.ApplicationAreaName));
 
-            return SyntaxFactory.Property(PropertyKind.ApplicationArea, SyntaxFactory.CommaSeparatedPropertyValue(values))
+            //try to convert from string to avoid issues with enum ids changed between AL compiler versions
+            PropertyKind propertyKind;
+            try
+            {
+                propertyKind = (PropertyKind)Enum.Parse(typeof(PropertyKind), "ApplicationArea", true);
+            }
+            catch (Exception)
+            {
+                propertyKind = PropertyKind.ApplicationArea;
+            }
+
+            return SyntaxFactory.Property(propertyKind, SyntaxFactory.CommaSeparatedPropertyValue(values))
                 .WithLeadingTrivia(leadingTriviaList)
                 .WithTrailingTrivia(trailingTriviaList);
         }
